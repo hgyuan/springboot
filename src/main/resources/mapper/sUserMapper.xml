@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.demo.springboot.mybatis.dao.SUserDao">
+    <resultMap id="BaseResultMap" type="com.demo.springboot.mybatis.model.SUserDomain">
+        <id property="id" column="id"/>
+        <result column="USER_NAME" property="userName"/>
+        <result column="EMAIL" property="email" />
+        <result column="ENABLED" property="enabled" />
+    </resultMap>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        select id,user_name,email,enabled from S_USER ;
+    </select>
+
+    <select id="findById" resultMap="BaseResultMap">
+        select id,user_name,email,enabled from S_USER where id = #{id};
+    </select>
+</mapper>
