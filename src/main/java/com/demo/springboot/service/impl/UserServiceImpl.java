@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.LinkedList;
 
 @Service
-public class UserService {
+public class UserServiceImpl {
     @Autowired
     SUserDao sUserDao;
     public LinkedList<SUserDomain> findAll(){

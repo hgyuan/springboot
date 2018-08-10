@@ -2,8 +2,8 @@ package com.demo.springboot.controller;
 
 
 
-import com.demo.springboot.service.impl.ESService;
-import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
+import com.demo.springboot.service.impl.ESServiceImpl;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,20 +15,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(value = "/es")
 public class ESController {
     @Autowired
-    ESService esService;
+    ESServiceImpl esService;
 
-    @RequestMapping(method = RequestMethod.GET,value="/create/{index}")
-    public CreateIndexResponse createIndex(@PathVariable String index){
-        return esService.createIndex(index);
-    }
-    @RequestMapping(method = RequestMethod.GET,value="/add/{index}")
+
+    @RequestMapping(method = RequestMethod.POST,value = "/{index}")
     public IndexResponse add(@PathVariable String index){
-        return esService.writeES(index);
+        return esService.write(index);
     }
 
-    @RequestMapping(method = RequestMethod.GET,value = "/delete/{index}")
-    public void delete(@PathVariable String index){
-        esService.deleteIndex(index);
+    @RequestMapping(method = RequestMethod.DELETE,value = "/{index}")
+    public DeleteIndexResponse delete(@PathVariable String index){
+        return esService.deleteIndex(index);
+    }
+
+
+    @RequestMapping(method = RequestMethod.POST,value = "/bulk/{index}")
+    public void bulk(@PathVariable String index){
+        esService.bulkWrite(index);
     }
 
 }

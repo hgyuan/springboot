@@ -3,14 +3,21 @@ package com.demo.springboot.service.impl;
 
 import com.demo.springboot.mybatis.dao.SUserDao;
 import com.demo.springboot.mybatis.model.SUserDomain;
+import com.demo.springboot.transform.ESTransformer;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
+import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
+import org.elasticsearch.action.bulk.BulkRequest;
+
+
+
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-public class ESService {
+public class ESServiceImpl {
     @Autowired
     RestHighLevelClient restHighLevelClient;
     @Autowired
@@ -41,16 +48,12 @@ public class ESService {
         return response;
     }
 
-    public IndexResponse writeES(String indexName){
+    public IndexResponse write(String indexName){
         assert  isIndexExist(indexName);
-        IndexRequest request = new IndexRequest(indexName,indexName);
         SUserDomain userDomain = sUserDao.findById(940);
-        Map<String, Object> jsonMap = new HashMap<>();
-        jsonMap.put("id",userDomain.getId());
-        jsonMap.put("userName",userDomain.getUserName());
-        jsonMap.put("email",userDomain.getEmail());
-        jsonMap.put("enabled",userDomain.getEnabled());
-        request.source(jsonMap);
+        IndexRequest request = new IndexRequest(indexName,indexName,String.valueOf(userDomain.getId()));
+        Map<String, Object> jsonMap = ESTransformer.transform(userDomain);
+        request.source(jsonMap,XContentType.JSON);
         try {
             return restHighLevelClient.index(request);
         } catch (IOException e) {
@@ -61,21 +64,45 @@ public class ESService {
 
     }
 
-    public void deleteIndex(String indexName){
-        assert isIndexExist(indexName);
+    public DeleteIndexResponse deleteIndex(String indexName){
         DeleteIndexRequest request = new DeleteIndexRequest(indexName);
+        DeleteIndexResponse response = null;
         try {
-            restHighLevelClient.indices().delete(request);
+            response = restHighLevelClient.indices().delete(request);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return response;
+    }
+
+
+    public void bulkWrite(String indexName){
+        if(!isIndexExist(indexName)){
+            System.out.println("index not exists");
+        }
+
+        BulkRequest bulkRequest =  new BulkRequest();
+        sUserDao.findAll().forEach(user -> {
+            IndexRequest indexRequest =
+                    new IndexRequest(indexName,indexName,String.valueOf(user.getId()));
+            Map<String,Object> jsonMap = ESTransformer.transform(user);
+            bulkRequest.add(indexRequest.source(jsonMap,XContentType.JSON));
+        });
+
+        try {
+            restHighLevelClient.bulk(bulkRequest);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
 
+
     public boolean isIndexExist(String indexName){
-        GetRequest request =  new GetRequest(indexName);
+
+
         try {
-            return restHighLevelClient.exists(request);
+            return restHighLevelClient.indices().exists(new GetIndexRequest().indices(indexName));
         } catch (IOException e) {
             e.printStackTrace();
         }
