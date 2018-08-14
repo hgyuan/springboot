@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class ESTransformer {
 
-    public static Map<String,Object> transform(Object object) {
+    public static Map<String,Object> transform2Map(Object object) {
         Map<String,Object> retMap = new HashMap<String,Object>();
         Class clazz = object.getClass();
         Field[]  fields  = object.getClass().getDeclaredFields();
@@ -43,7 +43,7 @@ public class ESTransformer {
         vo.setEnabled("2");
         vo.setUserName("admin");
         try {
-            transform(vo);
+            transform2Map(vo);
         } catch (Exception e) {
             e.printStackTrace();
         }

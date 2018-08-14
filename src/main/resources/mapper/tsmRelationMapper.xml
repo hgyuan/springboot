@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.demo.springboot.mybatis.dao.TsmRelationDao">
+
+    <resultMap id="BaseResultMap" type="com.demo.springboot.mybatis.model.TsmRelationDomain">
+        <id property="id" column="Id"/>
+        <result column="SUPPLIER_INTERID" property="supplierInterid"/>
+        <result column="OU_ID" property="ouId"/>
+        <result column="OU_CODE" property="ouCode"/>
+        <result column="OU_NAME" property="ouName"/>
+        <result column="PRODUCT_CODE" property="productCode"/>
+        <result column="PRODUCT_NAME" property="productName"/>
+        <result column="MANAGE_GROUP_ID" property="manageGroupId"/>
+
+    </resultMap>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        select * from T_SM_RELATION;
+    </select>
+</mapper>
