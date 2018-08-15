@@ -21,9 +21,14 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.unit.Fuzziness;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -40,6 +45,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
 @Service
 public class ESServiceImpl {
@@ -140,8 +148,35 @@ public class ESServiceImpl {
         return list;
     }
 
-    public void searchScroll(String indexName){
 
+
+    public SearchResponse searchScroll(String indexName,Integer size) {
+        SearchResponse searchResponse = null;
+        SearchRequest request = new SearchRequest(indexName);
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder().size(size);
+        sourceBuilder.query(matchAllQuery());
+        request.source(sourceBuilder);
+        request.scroll(TimeValue.timeValueMinutes(1));
+
+        try {
+            searchResponse = restHighLevelClient.search(request);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return searchResponse;
+    }
+
+
+    public SearchResponse searchScrollNext(String scrollId){
+        SearchResponse searchResponse = null;
+        SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
+        scrollRequest.scroll(new Scroll(TimeValue.timeValueMinutes(1)));
+        try {
+            searchResponse = restHighLevelClient.searchScroll(scrollRequest);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return searchResponse;
     }
 
 
