@@ -16,7 +16,7 @@ import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 
 
-
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -48,6 +48,7 @@ import java.util.Map;
 
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 
 @Service
 public class ESServiceImpl {
@@ -101,8 +102,9 @@ public class ESServiceImpl {
     }
 
 
-    public void bulkWrite(String indexName){
+    public BulkResponse bulkWrite(String indexName){
         BulkRequest bulkRequest =  new BulkRequest();
+        BulkResponse bulkResponse = null;
 //        sUserDao.findAll().forEach(user -> {
 //            IndexRequest indexRequest =
 //                    new IndexRequest(indexName,indexName,String.valueOf(user.getId()));
@@ -111,20 +113,21 @@ public class ESServiceImpl {
 //        });
         tsmRelationDao.findAll().forEach(user -> {
             IndexRequest indexRequest =
-                    new IndexRequest(indexName,indexName,String.valueOf(user.getId()));
+                    new IndexRequest(indexName,indexName);
             Map<String,Object> jsonMap = ESTransformer.transform2Map(user);
             bulkRequest.add(indexRequest.source(jsonMap,XContentType.JSON));
         });
 
         try {
-            restHighLevelClient.bulk(bulkRequest);
+            bulkResponse = restHighLevelClient.bulk(bulkRequest);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return bulkResponse;
     }
 
 
-    public List<Map<String,Object>> search(String indexName,Integer from,Integer size){
+    public SearchResponse search(String indexName,Integer from,Integer size){
         if(!isIndexExist(indexName)){
             return null;
         }
@@ -132,6 +135,7 @@ public class ESServiceImpl {
         SearchRequest searchRequest = new SearchRequest().indices(indexName);
         FieldSortBuilder fieldSortBuilder = new FieldSortBuilder("id").order(SortOrder.ASC);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(termsQuery("ouName","广州天河胶管制品有限公司"));
         searchSourceBuilder.from(from==null?0:from);
         searchSourceBuilder.size(size==null?10:size);
         searchSourceBuilder.sort(fieldSortBuilder);
@@ -142,10 +146,7 @@ public class ESServiceImpl {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        List<Map<String,Object>> list = new ArrayList<Map<String,Object>>();
-        Arrays.asList(searchResponse.getHits().getHits()).stream().
-                forEach(hit -> list.add(hit.getSourceAsMap()));
-        return list;
+        return searchResponse;
     }
 
 
@@ -178,6 +179,9 @@ public class ESServiceImpl {
         }
         return searchResponse;
     }
+
+
+
 
 
 

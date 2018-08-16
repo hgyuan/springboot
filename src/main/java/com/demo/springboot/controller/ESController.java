@@ -10,8 +10,10 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.rest.RestStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -58,8 +60,8 @@ public class ESController {
             @ApiImplicitParam(name = "index", value = "索引名称", required = true ,dataType = "string")
     })
     @RequestMapping(method = RequestMethod.PUT,value = "/bulk/{index}")
-    public void bulk(@PathVariable String index){
-        esService.bulkWrite(index);
+    public BulkResponse bulk(@PathVariable String index){
+        return esService.bulkWrite(index);
     }
 
     @ApiOperation(value="即时分页查询Index", notes="基础分页查询，适应多数场景，此方法ES默认不能超过10000行数据，可配置，但不建议")
@@ -69,7 +71,7 @@ public class ESController {
             @ApiImplicitParam(name = "size", value = "单页条数", dataType = "integer")
     })
     @RequestMapping(method = RequestMethod.GET,value = "/{index}")
-    public List<Map<String,Object>> search(@PathVariable String index,
+    public SearchResponse search(@PathVariable String index,
                                            @RequestParam(name="from",required = false) Integer from,
                                            @RequestParam(name="size",required = false) Integer size){
         return esService.search(index,from,size);
@@ -78,11 +80,11 @@ public class ESController {
     @ApiOperation(value="发起滚动逐页查询Index(非即时)", notes="适用大数据量的业务需求，非实时，增删改对于其查询结果不起作用")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "index", value = "索引名称", required = true ,dataType = "string"),
-            @ApiImplicitParam(name = "size", value = "单页条数", required = true ,dataType = "integer")
+            @ApiImplicitParam(name = "size", value = "单页条数",dataType = "integer")
     })
     @RequestMapping(method = RequestMethod.GET,value = "scroll/{index}")
     public SearchResponse scroll(@PathVariable String index,
-                                 @RequestParam(name="size",required = false) Integer size){
+                                 @RequestParam(name="size") Integer size){
         return esService.searchScroll(index,size);
     }
 
